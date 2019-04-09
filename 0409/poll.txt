@@ -28,12 +28,27 @@ while (1) {
 				if (ret <= 0) {
 					printf("연결이 종료되었습니다 \n");
 					FD_CLR(fd, &fds);
-				
+
 				}
 				write(fd, buf, ret);
 			}
 		}
-		
+		// poll의 핵심 : 감시하고자하는 디스크립터 배열을 직접 관리 해야한다.
+		// 새로운 디스크립터를 추가하고 삭제하는 로직을 작성해야한다. 
+		// 로직을 작성하면된다. 
+		// -1이 아닌것만 복사해서 해당 값을 작성한다. 
+		if (compress) {
+			int n = 0;
+			struct pollfd temp[4096];
+			for (i = 0; i < nfds; ++i) {
+				if (fds[i].fd != -1) {
+					temp[n++] = fds[i];
+				}
+			}
+			memcpy(fds, temp, n * sizeof(pollfd));
+			nfds = n;
+			compress = 0;
+		}
 	}
 }
 
