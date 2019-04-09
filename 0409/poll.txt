@@ -1,0 +1,42 @@
+struct pollfd fds[4096];
+// 감시하고자 하는 디스크립터를 하고 싶은 것만 감시하는 것이다.
+// select 는 set 되어있는 것을 감시하는 것이다. 
+
+fds[0].fd = ssock;
+fds[0].events = POLLIN;
+int nfds = 1;
+
+int i;
+int ret;
+char buf[512];
+while (1) {
+	poll(fds, nfds, -1);
+	for (i = 0; i < nfds; ++i) {
+		if (fds[i].revents &POLLIN) {
+			if (fds[i].fd == ssock) {
+				if (csock == -1) {
+					perror("accept");
+					return 1;
+				}
+				//감시하고자 하는 디스크립터를 등록한다.
+				fds[nfds].fd = csock;
+				fds[nfds].events = POLLIN; //read의 이벤트를 감시를 하고 싶다.
+				nfds++;
+			} else {
+				int fd = fds[i].fd;
+				ret = read(fd, buf, sizeof buf);
+				if (ret <= 0) {
+					printf("연결이 종료되었습니다 \n");
+					FD_CLR(fd, &fds);
+				
+				}
+				write(fd, buf, ret);
+			}
+		}
+		
+	}
+}
+
+동작 중간에 배열의 값이 변경되는 것은 좋지 않다. 
+로직에 flag를 만들어서 처리를 해준다. 
+
